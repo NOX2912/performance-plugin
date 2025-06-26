@@ -47,7 +47,7 @@ class UriReportTest {
 
     @Test
     void testHasSamples() throws Exception {
-        assertTrue(uriReport.hasSamples());
+        assertTrue(uriReport.haveSamples());
     }
 
     @Test
