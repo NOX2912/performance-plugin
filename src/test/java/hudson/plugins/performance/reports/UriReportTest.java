@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UriReportTest {
@@ -61,6 +62,39 @@ class UriReportTest {
     }
 
     @Test
+    void testGetMedian() {
+        // For 3 samples sorted as [0, 5, 10], the 50th percentile is calculated as index `(int)(3*0.5)-1=0`, which is the first element.
+        assertEquals(MIN, uriReport.getMedian());
+    }
+
+    @Test
+    void testGet90Line() {
+        // For 3 samples sorted as [0, 5, 10], the 90th percentile is calculated as index `(int)(3*0.9)-1=1`, which is the second element.
+        assertEquals(AVERAGE, uriReport.get90Line());
+    }
+
+    @Test
+    void testGet95Line() {
+        // For 3 samples sorted as [0, 5, 10], the 95th percentile is calculated as index `(int)(3*0.95)-1=1`, which is the second element.
+        assertEquals(AVERAGE, uriReport.get95Line());
+    }
+
+    @Test
+    void testErrorPercent() {
+        assertEquals(66.667, uriReport.errorPercent(), 0.001);
+    }
+
+    @Test
+    void testSamplesCount() {
+        assertEquals(3, uriReport.samplesCount());
+    }
+
+    @Test
+    void testGetHttpSampleList() {
+        assertEquals(3, uriReport.getHttpSampleList().size());
+    }
+
+    @Test
     void testGetMax() {
 		assertEquals(MAX, uriReport.getMax());
 	}
@@ -73,6 +107,43 @@ class UriReportTest {
     @Test
     void testIsFailed() {
         assertTrue(uriReport.isFailed());
+    }
+
+    @Test
+    void testEmptyReport() {
+        UriReport emptyReport = new UriReport(new PerformanceReport(), "empty", "empty");
+        assertTrue(emptyReport.getHttpSampleList().isEmpty());
+        assertFalse(emptyReport.hasSamples());
+        assertEquals(0, emptyReport.countErrors());
+        assertEquals(0, emptyReport.getAverage());
+        assertEquals(0, emptyReport.getMax());
+        assertEquals(0, emptyReport.getMin());
+        assertEquals(0, emptyReport.getMedian());
+        assertFalse(emptyReport.isFailed());
+        assertEquals(0, emptyReport.errorPercent(), 0.0);
+        assertEquals(0, emptyReport.samplesCount());
+    }
+
+    @Test
+    void testDiffs() {
+        UriReport lastReport = new UriReport(new PerformanceReport(), "test", "test");
+        HttpSample s1 = new HttpSample();
+        s1.setDuration(4);
+        s1.setSuccessful(true);
+        lastReport.addHttpSample(s1);
+        HttpSample s2 = new HttpSample();
+        s2.setDuration(8);
+        s2.setSuccessful(true);
+        lastReport.addHttpSample(s2);
+
+        uriReport.addLastBuildUriReport(lastReport);
+
+        // current: avg=5, median=0, error%=66.667, samples=3
+        // last: avg=(4+8)/2=6, median=4 (1st of [4,8]), error%=0, samples=2
+        assertEquals(-1, uriReport.getAverageDiff());
+        assertEquals(-4, uriReport.getMedianDiff());
+        assertEquals(66.667, uriReport.getErrorPercentDiff(), 0.001);
+        assertEquals(1, uriReport.getSamplesCountDiff());
     }
 
     /**
