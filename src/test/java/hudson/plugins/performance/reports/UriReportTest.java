@@ -62,7 +62,7 @@ class UriReportTest {
 
     @Test
     void testGetMax() {
-		assertEquals(MAX, uriReport.getMax());
+		assertEquals(MAX, uriReport.getMaximum());
 	}
 
     @Test
